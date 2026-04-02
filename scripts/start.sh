@@ -5,10 +5,16 @@ set -e
 [ -f /config/cupsd.conf ]    && cp /config/cupsd.conf    /etc/cups/cupsd.conf
 [ -f /config/printers.conf ] && cp /config/printers.conf /etc/cups/printers.conf
 
-# Создаём admin пользователя
+# Создаём admin пользователя через CUPS
 CUPSADMIN=${CUPSADMIN:-admin}
 CUPSPASSWORD=${CUPSPASSWORD:-admin}
-echo "${CUPSADMIN}:${CUPSPASSWORD}" | chpasswd
+useradd -M -s /usr/sbin/nologin "${CUPSADMIN}" 2>/dev/null || true
+echo "${CUPSPASSWORD}" | passwd --stdin "${CUPSADMIN}" 2>/dev/null || \
+    printf '%s\n%s\n' "${CUPSPASSWORD}" "${CUPSPASSWORD}" | passwd "${CUPSADMIN}" 2>/dev/null || true
+lppasswd -a "${CUPSADMIN}" << PASSEOF
+${CUPSPASSWORD}
+${CUPSPASSWORD}
+PASSEOF
 
 # Запускаем avahi
 mkdir -p /var/run/avahi-daemon
