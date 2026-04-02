@@ -2,19 +2,21 @@
 set -e
 
 # Копируем конфиги из /config если есть
-[ -f /config/cupsd.conf ]    && cp /config/cupsd.conf    /etc/cups/cupsd.conf
 [ -f /config/printers.conf ] && cp /config/printers.conf /etc/cups/printers.conf
 
-# Создаём admin пользователя через CUPS
+# Создаём admin пользователя
 CUPSADMIN=${CUPSADMIN:-admin}
 CUPSPASSWORD=${CUPSPASSWORD:-admin}
+
+# Создаём системного пользователя
 useradd -M -s /usr/sbin/nologin "${CUPSADMIN}" 2>/dev/null || true
-echo "${CUPSPASSWORD}" | passwd --stdin "${CUPSADMIN}" 2>/dev/null || \
-    printf '%s\n%s\n' "${CUPSPASSWORD}" "${CUPSPASSWORD}" | passwd "${CUPSADMIN}" 2>/dev/null || true
-lppasswd -a "${CUPSADMIN}" << PASSEOF
-${CUPSPASSWORD}
-${CUPSPASSWORD}
-PASSEOF
+
+# Устанавливаем пароль через openssl + passwd файл CUPS
+mkdir -p /etc/cups
+echo "${CUPSADMIN}:$(openssl passwd -apr1 ${CUPSPASSWORD})" > /etc/cups/passwd.md5
+
+# Прописываем пользователя в SystemGroup
+cupsctl --no-remote-admin 2>/dev/null || true
 
 # Запускаем avahi
 mkdir -p /var/run/avahi-daemon
