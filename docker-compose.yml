@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  cups:
+    build: .
+    image: cups-airprint-hp:local
+    container_name: cups
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /opt/cups/config:/config
+      - /etc/avahi/services:/services
+    environment:
+      - CUPSADMIN=admin
+      - CUPSPASSWORD=ChangeMe123
