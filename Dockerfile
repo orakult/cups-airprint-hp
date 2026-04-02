@@ -17,15 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         passwd \
     && rm -rf /var/lib/apt/lists/*
 
-RUN sed -i \
-        -e 's|Listen localhost:631|Listen 0.0.0.0:631|' \
-        -e 's|Browsing Off|Browsing On|' \
-        /etc/cups/cupsd.conf && \
-    sed -i \
-        -e 's|<Location />|<Location />\n  Allow All|' \
-        -e 's|<Location /admin>|<Location /admin>\n  Allow All|' \
-        -e 's|<Location /admin/conf>|<Location /admin/conf>\n  Allow All|' \
-        /etc/cups/cupsd.conf
+COPY config/cupsd.conf /etc/cups/cupsd.conf
 
 COPY scripts/start.sh /start.sh
 COPY scripts/printer-update.sh /printer-update.sh
